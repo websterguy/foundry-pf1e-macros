@@ -81,7 +81,7 @@ else {
     if (actor.isPC) checked = 'checked';
     checkPlayerOptions+=`
         <br>
-        <input type="checkbox" name="${actor.name}" value="${actor.name}" ${checked}>\n
+        <input type="checkbox" class="awardedPC" name="${actor.name}" value="${actor.name}" ${checked}>\n
         <label for="${actor.name}">${actor.name}</label>
     `
   });
@@ -100,7 +100,7 @@ else {
       ok: {
         label: "Give All",
         callback: html => {
-          let checkedArray = html.find('input[type="checkbox"]:checked');
+          let checkedArray = html.find('input[class="awardedPC"]:checked');
           let checkedCount = checkedArray.length;
           let xp = parseInt(html.find('input[name="xp"]').val());
           _action(xp, checkedArray, false, checkedCount, xp);
@@ -109,7 +109,7 @@ else {
       distribute: {
         label: "Distribute",
         callback: html => {
-          let checkedArray = html.find('input[type="checkbox"]:checked');
+          let checkedArray = html.find('input[class="awardedPC"]:checked');
           let checkedCount = checkedArray.length;
           let originalXp = parseInt(html.find('input[name="xp"]').val());
           let xp = Math.floor(originalXp / checkedCount);
