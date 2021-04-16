@@ -11,7 +11,7 @@ canvas.tokens.selectObjects();
 const tokens = canvas.tokens.controlled;
 let actors = tokens.map(o => o.actor);
 if (!actors.length && c.ignorePCs.length > 0) actors = game.actors.entities.filter(o => !c.ignorePCs.includes(o.name));
-if (!actors.length) actors = game.actors.entities.filter(o => o.isPC);
+if (!actors.length) actors = game.actors.entities.filter(o => o.hasPlayerOwner);
 actors = actors.filter(o => o.hasPerm(game.user, "OWNER"));
 
 if (!actors.length) ui.notifications.warn("No applicable actor(s) found");
@@ -61,7 +61,7 @@ else {
   let npcXpTotal = 0;
   
   if (thisCombat && thisCombat.length > 0) {
-      let combatNPCs = thisCombat.filter(o => !o.actor.isPC && o.actor.data.type === "npc" && !c.ignoreNPCs.includes(o.actor.name));
+      let combatNPCs = thisCombat.filter(o => !o.actor.hasPlayerOwner && o.actor.data.type === "npc" && !c.ignoreNPCs.includes(o.actor.name));
       hasNPCs = (combatNPCs.length > 0);
       if (hasNPCs) {
           combatNPCs.forEach(combatant => {
@@ -78,7 +78,7 @@ else {
   actors.forEach(actor => {
     let checked = '';
     if (actor.data.type === "npc") return;
-    if (actor.isPC) checked = 'checked';
+    if (actor.hasPlayerOwner) checked = 'checked';
     checkPlayerOptions+=`
         <br>
         <input type="checkbox" class="awardedPC" name="${actor.name}" value="${actor.name}" ${checked}>\n
