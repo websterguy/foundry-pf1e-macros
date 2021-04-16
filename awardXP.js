@@ -91,11 +91,12 @@ else {
     <br>
     ${hasNPCs ? `<br>Award XP for the following: <br>${npcChecklist}` : ``}
     `;
-  const field = `<input type="text" id="xpAwardValue" name="xp" value="${npcXpTotal}" placeholder="XP amount" style="margin-bottom: 8px;" />`;
+  const field = `<input type="text" id="xpAwardEntry" name="xp" placeholder="XP amount" style="margin-bottom: 8px;" />`;
+  const xpDisplay = `<h3>Total XP: <span id="xpAwardTotal">${npcXpTotal}</span></h3>`;
 
   new Dialog({
     title: "Roll saving throw",
-    content: `<p>${msg}</p>${field}`,
+    content: `<p>${msg}</p>${field}${xpDisplay}`,
     buttons: {
       ok: {
         label: "Give All",
@@ -118,15 +119,26 @@ else {
       }
     },
     render: (htm) => {
-          htm.find('.npcXPCheckbox').click(updateValue.bind(this, htm.find('input[name="xp"]')));
+          htm.find('.npcXPCheckbox').click(updateChecked.bind(this, htm.find('span[id="xpAwardTotal"]'), htm.find('input[id="xpAwardEntry"]')));
+          htm.find('#xpAwardEntry').on('input', updateValue.bind(this, htm.find('span[id="xpAwardTotal"]'), htm.find('input[id="xpAwardEntry"]')))
       },
   }).render(true);
 
-  let updateValue = function(xpInput, event) {
+  let updateChecked = function(xpSpan, xpInput, event) {
     let checkbox = event.target;
-    let xp = parseInt(xpInput.val());
-    xp = checkbox.checked ? (xp + parseInt(checkbox.value)) : (xp - parseInt(checkbox.value));
-    xpInput.val(xp);
+    npcXpTotal = checkbox.checked ? (npcXpTotal + parseInt(checkbox.value)) : (npcXpTotal - parseInt(checkbox.value));
+    
+    let inputXP = parseInt(xpInput.val());
+    if (isNaN(inputXP)) inputXP = 0;
+    let newXP = npcXpTotal + inputXP;
+    xpSpan[0].innerHTML = newXP;
+  }
+  
+  let updateValue = function(xpSpan, xpInput, event) {
+    let inputXP = parseInt(xpInput.val());
+    if (isNaN(inputXP)) inputXP = 0;
+    let newXP = npcXpTotal + inputXP;
+    xpSpan[0].innerHTML = newXP;
   }
   
 }
