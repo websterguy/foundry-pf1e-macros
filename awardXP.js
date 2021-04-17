@@ -7,12 +7,13 @@ const c = {
 };
 // END CONFIGURATION
 
-canvas.tokens.selectObjects();
 const tokens = canvas.tokens.controlled;
-let actors = tokens.map(o => o.actor);
+let actorsSelected = tokens.map(o => o.actor);
+console.log(actorsSelected);
+let actors = [];
 if (!actors.length && c.ignorePCs.length > 0) actors = game.actors.entities.filter(o => !c.ignorePCs.includes(o.name));
 if (!actors.length) actors = game.actors.entities.filter(o => o.hasPlayerOwner);
-actors = actors.filter(o => o.hasPerm(game.user, "OWNER"));
+actors = actors.filter(o => o.hasPerm(game.user, "OWNER") && !c.ignorePCs?.includes(o.name));
 
 if (!actors.length) ui.notifications.warn("No applicable actor(s) found");
 else {
@@ -50,7 +51,8 @@ else {
         msg += `</div>`;
         
         ChatMessage.create({
-            content: msg
+            content: msg,
+            speaker: ChatMessage.getSpeaker({alias: "XP Awarded"})
         });
     }
   };
@@ -79,6 +81,7 @@ else {
     let checked = '';
     if (actor.data.type === "npc") return;
     if (actor.hasPlayerOwner) checked = 'checked';
+    if (actorsSelected.length && !actorsSelected.includes(actor)) checked = '';
     checkPlayerOptions+=`
         <br>
         <input type="checkbox" class="awardedPC" name="${actor.name}" value="${actor.name}" ${checked}>\n
