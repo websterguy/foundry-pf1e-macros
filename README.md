@@ -1,6 +1,6 @@
 # foundry-pf1e-macros
 
-## AwardXP
+## awardXP
 Award XP macro builds a checklist of PCs and allows the GM to distribute a given amount of XP to the PCs (either all receiving the same or an equal share of the amount).
 
 If there is currently a combat active, builds a checklist of NPCs to automatically add to the XP calculation.
