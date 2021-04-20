@@ -14,7 +14,7 @@ Follows Pathfinder 1e rules for Summon Monster and Summon Nature's Ally for dura
 
 If Turn Alert module is active and there is currently a combat, will create an alert for when the summons expire.
 
-##spontaneousCasting
+## spontaneousCasting
 Provides simple menu for replacing a prepared spell slot with a casting of a class' spontaneous replacement spell of the same level or lower (e.g. Cure spells for good Clerics).
 
 Caster must have a spellbook with prepared spells and the spontaneous replacement must be set as an at-will spell.
