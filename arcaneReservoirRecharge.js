@@ -115,7 +115,7 @@ async function useSlot(htm, event) {
     // Build chat card and display
     let msg = `<div class="pf1 chat-card">
                     <header class="card-header flexrow">
-                        <h3 class="actor-name">Spontaneous Replacement</h3>
+                        <h3 class="actor-name">Consume Spell Used</h3>
                     </header>
                     <div class="result-text">
                         <p>${actor.name} loses level ${usedLevel} preparation to recharge Arcane Pool (now ${newArcaneCharges}/${arcaneMax}).</p>
