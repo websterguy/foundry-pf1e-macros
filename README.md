@@ -18,3 +18,8 @@ If Turn Alert module is active and there is currently a combat, will create an a
 Provides simple menu for replacing a prepared spell slot with a casting of a class' spontaneous replacement spell of the same level or lower (e.g. Cure spells for good Clerics).
 
 Caster must have a spellbook with prepared spells and the spontaneous replacement must be set as an at-will spell.
+
+## arcaneReservoirRecharge
+Provides a simple menu for an Arcanist character to recharge their Arcane Reservoir by expending a spell slot.
+
+Caster must have a spellbook set up as spontaneous linked to the Arcanist class.
