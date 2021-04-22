@@ -118,7 +118,7 @@ async function useSlot(htm, event) {
                         <h3 class="actor-name">Consume Spell Used</h3>
                     </header>
                     <div class="result-text">
-                        <p>${actor.name} loses level ${usedLevel} preparation to recharge Arcane Pool (now ${newArcaneCharges}/${arcaneMax}).</p>
+                        <p>${actor.name} loses level ${usedLevel} preparation to recharge Arcane Reservoir (now ${newArcaneCharges}/${arcaneMax}).</p>
                     </div>
                 </div>`;
                 
