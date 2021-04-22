@@ -104,7 +104,7 @@ async function useSlot(htm, event) {
     let dataLocation = "data.attributes.spells.spellbooks." + usedBook + ".spells." + usedSlot + ".value";
     let updateData = {};
     updateData[dataLocation] = newSpellUses;
-    actor.update(updateData);
+    await actor.update(updateData);
     
     // Update arcane pool
     let newArcaneCharges = arcaneValue + parseInt(usedLevel) > arcaneMax ? arcaneMax : arcaneValue + parseInt(usedLevel);
