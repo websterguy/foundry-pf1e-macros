@@ -1,13 +1,15 @@
 /**
- * Provides simple menu for replacing a prepared spell slot with a casting of a class' spontaneous replacement spell (e.g. Cure spells for good Clerics).
+ * Provides simple menu for Arcanists to remove a prepared spell slot to recharge their Arcane Reservoir as per the Consume Spells (Su) ability.
  * 
- * Caster must have a spellbook with prepared spells and the spontaneous replacement must be set as an at-will spell.
+ * Caster must have a spellbook linked to the Arcanist class that is set up as spontaneous (The general concensus in the current PF1e system on
+ * Foundry is to set up an Arcanist as a spontaneous caster with casts per day equal to their prepared slots per day and keep track of their own number
+ * of actually prepared spells using the gear "prepared" button
  **/
 
 // CONFIGURATION
-// Leave the actorNames array empty to guess the players
-// Example actorNames: `actorNames: ["Bob", "John"],
-// Fill in allowed prepared caster classes that spontaneous replace in lower case below
+// Leave the actorName string empty to guess the players
+// Example actorNames: `actorNames: "Bob",
+// If using for a class with a different name or class feature, change Arcanist or Arcane Reservoir
 const c = {
   actorName: "",
   arcanistClassName: "Arcanist",
