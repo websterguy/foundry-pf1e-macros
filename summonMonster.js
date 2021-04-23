@@ -14,14 +14,16 @@
  **/
 const config = {
     packSource: ["pf1"], // list of package sources for summons actor folders
-    destinationFolder: "Summons" // Folder to file summons in when imported. Will be auto-created by GM users, but not players
+    ignoreCompendiums: [""], // list of compendium names to ignore
+    destinationFolder: "Summons", // Folder to file summons in when imported. Will be auto-created by GM users, but not players
+    renameAugmented: true // Appends "(Augmented)" to the token if augmented"
 }
 
 // Check for Turn Alert module
 const turnAlertActive = game.modules.has("turnAlert");
 
 // Build options for folders to summon from
-let packOptions = `<option value=""></option>` + game.packs.filter(p => p.entity === "Actor" && config.packSource.includes(p.metadata.package)).map(p => `<option value="${p.collection}">${p.title}</option>`);
+let packOptions = `<option value=""></option>` + game.packs.filter(p => p.entity === "Actor" && config.packSource.includes(p.metadata.package) && !config.ignoreCompendiums.includes(p.metadata.label)).map(p => `<option value="${p.collection}">${p.title}</option>`);
 
 let summonerActor;
 let summonerToken;
@@ -68,14 +70,6 @@ if (summonerActor && summonerToken) {
                 <input type="number" id="clOverride" placeholder="CL (e.g. for scrolls)">
             </div>
             <div class="form-group">
-                <label>Extend (Metamagic):</label>
-                <input type="checkbox" id="extendCheck">
-            </div>
-            <div class="form-group">
-                <label>Reach (Metamagic):</label>
-                <input type="checkbox" id="reachCheck">
-            </div>
-            <div class="form-group">
                 <label>Summon From:</label>
                 <select id="sourceSelect">
                     ${packOptions}
@@ -89,6 +83,19 @@ if (summonerActor && summonerToken) {
             <div class="form-group">
                 <label>Number to Summon:</label>
                 <input type="text" id="summonCount" placeholder="e.g. 1, 1d4+1">
+            </div>
+            <div class="form-group">
+                <label>Augment Summoning:</label>
+                <input type="checkbox" id="augmentCheck">
+            </div>
+            <div class="form-group">
+                <label>Extend (Metamagic):</label>
+                <input type="checkbox" id="extendCheck">
+            </div>
+            <div class="form-group">
+                <label>Reach (Metamagic):</label>
+                <input type="checkbox" id="reachCheck">
+            </div>
         </form>
     `;
     
@@ -194,6 +201,12 @@ async function importMonster(html) {
         else casterLevel = clOverride;
     }
     
+    //Set up buff for augment
+    let buffData = null;
+    if (html.find("#augmentCheck")[0].checked) {
+        buffData = { type: "buff", name: "Augment Summoning", data: { buffType: "temp" } };
+    }
+    
     // Set up range as close or medium based on caster level and range metamagic
     let range = 0;
     if (html.find("#reachCheck")[0].checked) range = (100 + (casterLevel * 10));
@@ -209,7 +222,21 @@ async function importMonster(html) {
         let tokenForId = await canvas.tokens.createMany(createdMonster.data.token, {temporary: true});
         tokenForId.x = summonerToken.data.x;
         tokenForId.y = summonerToken.data.y;
-        tokenCreated = await canvas.tokens.createMany(tokenForId) ;
+        tokenCreated = await canvas.tokens.createMany(tokenForId);
+        if (buffData) {
+            tokenCreated = canvas.tokens.get(tokenCreated._id);
+            await tokenCreated.actor.createOwnedItem(buffData);
+            let buff = tokenCreated.actor.items.find(o => o.name === "Augment Summoning" && o.type === "buff");
+            let changes = [];
+            changes.push({formula: "4", priority: 1, target: "ability", subTarget: "str", modifier: "enh"});
+            changes.push({formula: "4", priority: 1, target: "ability", subTarget: "dex", modifier: "enh"});
+            await buff.update({"data.changes": changes});
+            await buff.update({"data.active": true});
+            if (c.renameAugmented) {
+                let actorName = tokenCreated.name + " (Augmented)";
+                await tokenCreated.actor.update({"name": actorName});
+            }
+        }
     }
     
     // If there is a combat active and Turn Alert is enabled, create an alert at this initiative in CL rounds
