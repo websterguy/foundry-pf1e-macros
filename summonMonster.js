@@ -6,17 +6,19 @@
  * If Turn Alert module is enabled and there is a current combat, will place an alert for when the summons expire
  * 
  * GM users must select a token to act as the summoner
- * Player users must have their character configured under player configuration
- * 
+ * Player users must have their character configured under player configuration (linked to their user in the bottom left list of connected/disconnected users)
+ * The above can be disabled in config to allow players users to use any owned token as the summoner, but they must select a token
+ *
  * Uses standard Pathfinder 1e summon monster/nature's ally rules
  * (1 round/CL, close range, extend metamagic doubles duration, reach metamagic is medium range)
  * 
  **/
 const config = {
     packSource: ["pf1"], // list of package sources for summons actor folders
-    ignoreCompendiums: [""], // list of compendium names to ignore
+    ignoreCompendiums: [""],
     destinationFolder: "Summons", // Folder to file summons in when imported. Will be auto-created by GM users, but not players
-    renameAugmented: true // Appends "(Augmented)" to the token if augmented"
+    renameAugmented: true, // Appends "(Augmented)" to the token if augmented"
+    useUserLinkedActorOnly: true // Change to false to allow users to use any selected token they own as the summoner
 }
 
 // Check for Turn Alert module
@@ -30,7 +32,7 @@ let summonerToken;
 let classArray = [];
 
 // Get actor and token info
-if (game.user.isGM) {
+if (game.user.isGM || !config.useUserLinkedActorOnly) {
     // GMs must have a token selected
     let selectedTokens = canvas.tokens.controlled;
     if (!selectedTokens.length) ui.notifications.warn("No token chosen as summoner.");
@@ -232,10 +234,8 @@ async function importMonster(html) {
             changes.push({formula: "4", priority: 1, target: "ability", subTarget: "dex", modifier: "enh"});
             await buff.update({"data.changes": changes});
             await buff.update({"data.active": true});
-            if (c.renameAugmented) {
-                let actorName = tokenCreated.name + " (Augmented)";
-                await tokenCreated.actor.update({"name": actorName});
-            }
+            let actorName = tokenCreated.name + " (Augmented)";
+            await tokenCreated.actor.update({"name": actorName});
         }
     }
     
