@@ -14,6 +14,9 @@ Follows Pathfinder 1e rules for Summon Monster and Summon Nature's Ally for dura
 
 If Turn Alert module is active and there is currently a combat, will create an alert for when the summons expire.
 
+## deleteSummonsActors
+For use in conjunction with summonMonster. Just clears out actors from the designated folder, deleting old summons (but not their tokens).
+
 ## spontaneousCasting
 Provides simple menu for replacing a prepared spell slot with a casting of a class' spontaneous replacement spell of the same level or lower (e.g. Cure spells for good Clerics).
 
