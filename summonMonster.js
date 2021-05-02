@@ -21,6 +21,7 @@ const config = {
     useUserLinkedActorOnly: true // Change to false to allow users to use any selected token they own as the summoner
 }
 
+
 // Check for Turn Alert module
 const turnAlertActive = game.modules.has("turnAlert");
 
@@ -54,7 +55,10 @@ else {
 if (summonerActor && summonerToken) {
     // Build list of character's classes sorted by level (high to low)
     classArray = Object.values(summonerActor.data.data.classes).sort(function(a, b) {return b.level - a.level});
-    let classOptions = classArray.map((p, index) => `<option value="${index}">${p.name} (Level ${p.level})</option>`)
+    let classOptions = classArray.map((p, index) => `<option value="${index}">${p.name} (Level ${p.level})</option>`);
+    
+    let ownerCheck = "";
+    if (game.user.isGM && summonerActor.hasPlayerOwner) ownerCheck = `<div class="form-group"><label>Give Ownership to ${summonerActor.name}'s Owners:</label><input type="checkbox" id="ownerCheck"></div>`;
     
     // Build UI
     const form = `
@@ -98,6 +102,7 @@ if (summonerActor && summonerToken) {
                 <label>Reach (Metamagic):</label>
                 <input type="checkbox" id="reachCheck">
             </div>
+            ${ownerCheck}
         </form>
     `;
     
@@ -173,7 +178,11 @@ async function importMonster(html) {
     // Update the actor permissions
     let currentPermission = createdMonster.data.permission;
     let updatedPermission = currentPermission[game.userId] = 3;
-    await createdMonster.update({"folder": folderID, "permission": currentPermission});
+    if (game.user.isGM) {
+        let giveOwnerCheck = html.find('#ownerCheck')[0].checked;
+        if (giveOwnerCheck) updatedPermission = summonerActor.data.permission;
+    }
+    await createdMonster.update({"folder": folderID, "permission": updatedPermission});
     
     // Get info about summon count
     let countFormula = html.find("#summonCount").val();
