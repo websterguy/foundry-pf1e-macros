@@ -23,7 +23,7 @@ const config = {
 
 
 // Check for Turn Alert module
-const turnAlertActive = game.modules.has("turnAlert");
+const turnAlertActive = game.modules.get("turnAlert")?.active;
 
 // Build options for folders to summon from
 let packOptions = `<option value=""></option>` + game.packs.filter(p => p.entity === "Actor" && config.packSource.includes(p.metadata.package) && !config.ignoreCompendiums.includes(p.metadata.label)).map(p => `<option value="${p.collection}">${p.title}</option>`);
