@@ -240,7 +240,7 @@ async function importMonster(html) {
             let buff = tokenCreated.actor.items.find(o => o.name === "Augment Summoning" && o.type === "buff");
             let changes = [];
             changes.push({formula: "4", priority: 1, target: "ability", subTarget: "str", modifier: "enh"});
-            changes.push({formula: "4", priority: 1, target: "ability", subTarget: "dex", modifier: "enh"});
+            changes.push({formula: "4", priority: 1, target: "ability", subTarget: "con", modifier: "enh"});
             await buff.update({"data.changes": changes});
             await buff.update({"data.active": true});
             let actorName = tokenCreated.name + " (Augmented)";
