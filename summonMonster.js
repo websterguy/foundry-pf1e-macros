@@ -178,7 +178,7 @@ async function importMonster(html) {
     // Update the actor permissions
     let currentPermission = createdMonster.data.permission;
     let updatedPermission = currentPermission[game.userId] = 3;
-    if (game.user.isGM) {
+    if (game.user.isGM && summonerActor.hasPlayerOwner) {
         let giveOwnerCheck = html.find('#ownerCheck')[0].checked;
         if (giveOwnerCheck) updatedPermission = summonerActor.data.permission;
     }
@@ -226,6 +226,19 @@ async function importMonster(html) {
     // Double caster level for extend metamagic
     if (html.find("#extendCheck")[0].checked) casterLevel *= 2;
     
+    if (buffData) {
+        await createdMonster.createOwnedItem(buffData);
+        let buff = createdMonster.items.find(o => o.name === "Augment Summoning" && o.type === "buff");
+        let changes = [];
+        changes.push({formula: "4", priority: 1, target: "ability", subTarget: "str", modifier: "enh"});
+        changes.push({formula: "4", priority: 1, target: "ability", subTarget: "con", modifier: "enh"});
+        await buff.update({"data.changes": changes});
+        await buff.update({"data.active": true});
+        let actorName = createdMonster.name + " (Augmented)";
+        await createdMonster.update({"name": actorName});
+    }
+    
+    
     // Create desired number of tokens and place them on top of the summoner token
     canvas.tokens.releaseAll();
     let tokenCreated;
@@ -234,23 +247,12 @@ async function importMonster(html) {
         tokenForId.x = summonerToken.data.x;
         tokenForId.y = summonerToken.data.y;
         tokenCreated = await canvas.tokens.createMany(tokenForId);
-        if (buffData) {
-            tokenCreated = canvas.tokens.get(tokenCreated._id);
-            await tokenCreated.actor.createOwnedItem(buffData);
-            let buff = tokenCreated.actor.items.find(o => o.name === "Augment Summoning" && o.type === "buff");
-            let changes = [];
-            changes.push({formula: "4", priority: 1, target: "ability", subTarget: "str", modifier: "enh"});
-            changes.push({formula: "4", priority: 1, target: "ability", subTarget: "con", modifier: "enh"});
-            await buff.update({"data.changes": changes});
-            await buff.update({"data.active": true});
-            let actorName = tokenCreated.name + " (Augmented)";
-            await tokenCreated.actor.update({"name": actorName});
-        }
+        
     }
     
     // If there is a combat active and Turn Alert is enabled, create an alert at this initiative in CL rounds
     let thisCombatant = game.combat?.combatant;
-    if (thisCombatant && turnAlertActive) {    
+    if (thisCombatant && turnAlertActive) {
         if (casterLevel > 0) {
             const alertData = {
                 round: casterLevel,
@@ -264,12 +266,22 @@ async function importMonster(html) {
     }
     
     // Create chat message about summon
+    let rollResultDisplay = "";
+    for (var i = 0; i < roll.results.length; i++) {
+        if (roll.terms[i].results) {
+            rollResultDisplay += `<${roll.results[i]}>`;
+        }
+        else {
+            rollResultDisplay += `${roll.results[i]}`;
+        }
+    }
+    
     let msg = `<div class="pf1 chat-card">
                     <header class="card-header flexrow">
                         <h3 class="actor-name">Summoning!</h3>
                     </header>
                     <div class="result-text">
-                        <p><a class="inline-roll inline-result" title="${roll.formula}"><i class="fas fa-dice-d20"></i> ${roll.total}</a> ${createdMonster.name} summoned for ${casterLevel} rounds within ${range} feet range.</p>
+                        <p><a class="inline-roll inline-result" title="${roll.formula} = ${rollResultDisplay}"><i class="fas fa-dice-d20"></i> ${roll.total}</a> ${createdMonster.name} summoned for ${casterLevel} rounds within ${range} feet range.</p>
                     </div>
                 </div>`
                 
