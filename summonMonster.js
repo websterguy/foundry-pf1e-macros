@@ -21,7 +21,6 @@ const config = {
     useUserLinkedActorOnly: true // Change to false to allow users to use any selected token they own as the summoner
 }
 
-
 // Check for Turn Alert module
 const turnAlertActive = game.modules.get("turnAlert")?.active;
 
@@ -265,23 +264,15 @@ async function importMonster(html) {
         }
     }
     
-    // Create chat message about summon
-    let rollResultDisplay = "";
-    for (var i = 0; i < roll.results.length; i++) {
-        if (roll.terms[i].results) {
-            rollResultDisplay += `<${roll.results[i]}>`;
-        }
-        else {
-            rollResultDisplay += `${roll.results[i]}`;
-        }
-    }
+    if (game.modules.get("dice-so-nice")?.active) game.dice3d.showForRoll(roll);
     
+    // Create chat message about summon
     let msg = `<div class="pf1 chat-card">
                     <header class="card-header flexrow">
                         <h3 class="actor-name">Summoning!</h3>
                     </header>
                     <div class="result-text">
-                        <p><a class="inline-roll inline-result" title="${roll.formula} = ${rollResultDisplay}"><i class="fas fa-dice-d20"></i> ${roll.total}</a> ${createdMonster.name} summoned for ${casterLevel} rounds within ${range} feet range.</p>
+                        <p><a class="inline-roll inline-result" title="${roll.formula}" data-roll="${encodeURI(JSON.stringify(roll))}"><i class="fas fa-dice-d20"></i> ${roll.total}</a> ${createdMonster.name} summoned for ${casterLevel} rounds within ${range} feet range.</p>
                     </div>
                 </div>`
                 
