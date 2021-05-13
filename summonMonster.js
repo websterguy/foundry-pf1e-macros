@@ -168,20 +168,16 @@ async function importMonster(html) {
     }
     
     // Import the monster from the compendium
-    let monsterEntity = game.packs.get(selectedPack).getEntity(selectedMonster);
-    let createdMonster;
-    await Promise.resolve(monsterEntity).then(async function(value){
-        createdMonster = await Actor.create(value);
-    })
+    let monsterEntity = await game.packs.get(selectedPack).getEntity(selectedMonster);
+    let createdMonster = await Actor.create(monsterEntity);
     
-    // Update the actor permissions
-    let currentPermission = createdMonster.data.permission;
-    let updatedPermission = currentPermission[game.userId] = 3;
     if (game.user.isGM && summonerActor.hasPlayerOwner) {
+        let updatedPermission;
         let giveOwnerCheck = html.find('#ownerCheck')[0].checked;
         if (giveOwnerCheck) updatedPermission = summonerActor.data.permission;
+        await createdMonster.update({"permission": updatedPermission});
     }
-    await createdMonster.update({"folder": folderID, "permission": updatedPermission});
+    await createdMonster.update({"folder": folderID});
     
     // Get info about summon count
     let countFormula = html.find("#summonCount").val();
