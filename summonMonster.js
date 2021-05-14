@@ -19,7 +19,7 @@ const config = {
     destinationFolder: "Summons", // Folder to file summons in when imported. Will be auto-created by GM users, but not players
     renameAugmented: true, // Appends "(Augmented)" to the token if augmented"
     useUserLinkedActorOnly: true // Change to false to allow users to use any selected token they own as the summoner
-;
+};
 
 // Check for Turn Alert module
 const turnAlertActive = game.modules.get("turnAlert")?.active;
