@@ -19,7 +19,7 @@ const config = {
     destinationFolder: "Summons", // Folder to file summons in when imported. Will be auto-created by GM users, but not players
     renameAugmented: true, // Appends "(Augmented)" to the token if augmented"
     useUserLinkedActorOnly: true // Change to false to allow users to use any selected token they own as the summoner
-}
+;
 
 // Check for Turn Alert module
 const turnAlertActive = game.modules.get("turnAlert")?.active;
@@ -30,6 +30,10 @@ let packOptions = `<option value=""></option>` + game.packs.filter(p => p.entity
 let summonerActor;
 let summonerToken;
 let classArray = [];
+let gNumSpawned = 0;
+let gNeedSpawn = 100;
+let createdMonster;
+let range = 0;
 
 // Get actor and token info
 if (game.user.isGM || !config.useUserLinkedActorOnly) {
@@ -142,6 +146,24 @@ async function populateMonster(htm, event) {
 }
 
 /**
+ * Spawns the token of createdMonster at the position of the mouse when clicked
+ */
+async function spawnToken() {
+    let tokenForId = await canvas.tokens.createMany(createdMonster.data.token, {temporary: true});
+    
+    let location = getCenterGrid(getMousePosition());
+ 
+    tokenForId.x = location.x;
+    tokenForId.y = location.y;
+ 
+    // Increase this offset for larger summons
+    tokenForId.x -= (scene.data.grid/2+(tokenForId.width-1)*scene.data.grid);
+    tokenForId.y -= (scene.data.grid/2+(tokenForId.height-1)*scene.data.grid);
+ 
+    await canvas.tokens.createMany(tokenForId);
+ }
+
+/**
  * Imports the selected monster into the game world, sorts it into the desired folder (if any),
  * spawns the desired number of tokens on top of the summoner's token, creates a chat message giving
  * details about the summon that occured, and creates a Turn Alert alert for when the summon ends (if
@@ -168,16 +190,19 @@ async function importMonster(html) {
     }
     
     // Import the monster from the compendium
-    let monsterEntity = await game.packs.get(selectedPack).getEntity(selectedMonster);
-    let createdMonster = await Actor.create(monsterEntity);
+    let monsterEntity = game.packs.get(selectedPack).getEntity(selectedMonster);
+    await Promise.resolve(monsterEntity).then(async function(value){
+        createdMonster = await Actor.create(value);
+    })
     
+    // Update the actor permissions
+    let currentPermission = createdMonster.data.permission;
+    let updatedPermission = currentPermission[game.userId] = 3;
     if (game.user.isGM && summonerActor.hasPlayerOwner) {
-        let updatedPermission;
         let giveOwnerCheck = html.find('#ownerCheck')[0].checked;
         if (giveOwnerCheck) updatedPermission = summonerActor.data.permission;
-        await createdMonster.update({"permission": updatedPermission});
     }
-    await createdMonster.update({"folder": folderID});
+    await createdMonster.update({"folder": folderID, "permission": updatedPermission});
     
     // Get info about summon count
     let countFormula = html.find("#summonCount").val();
@@ -194,9 +219,10 @@ async function importMonster(html) {
     // Calculate the roll
     roll = new Roll(countFormula).roll();
     rollResult = roll.total;
+    gNeedSpawn = rollResult;
     
     // Find chosen caster level info
-    let chosenIndex = parseInt(html.find("#classSelect").val())
+    let chosenIndex = parseInt(html.find("#classSelect").val());
     let classCL = classArray[chosenIndex].level;
     let casterLevel = classCL;
     let clOverride = parseInt(html.find("#clOverride").val());
@@ -214,36 +240,36 @@ async function importMonster(html) {
     }
     
     // Set up range as close or medium based on caster level and range metamagic
-    let range = 0;
     if (html.find("#reachCheck")[0].checked) range = (100 + (casterLevel * 10));
     else range = (25 + (Math.floor(casterLevel / 2) * 5));
     
     // Double caster level for extend metamagic
     if (html.find("#extendCheck")[0].checked) casterLevel *= 2;
     
+    // Create the buff on the actor for augment, set the bonuses, hide it on the token, and change actor's name
     if (buffData) {
         await createdMonster.createOwnedItem(buffData);
         let buff = createdMonster.items.find(o => o.name === "Augment Summoning" && o.type === "buff");
         let changes = [];
         changes.push({formula: "4", priority: 1, target: "ability", subTarget: "str", modifier: "enh"});
         changes.push({formula: "4", priority: 1, target: "ability", subTarget: "con", modifier: "enh"});
-        await buff.update({"data.changes": changes});
+        await buff.update({"data.changes": changes, "data.hideFromToken": true});
         await buff.update({"data.active": true});
         let actorName = createdMonster.name + " (Augmented)";
         await createdMonster.update({"name": actorName});
+        await createdMonster.update({"token.name": actorName});
     }
     
     
-    // Create desired number of tokens and place them on top of the summoner token
-    canvas.tokens.releaseAll();
-    let tokenCreated;
-    for (let i = 0; i < rollResult; i++) {
-        let tokenForId = await canvas.tokens.createMany(createdMonster.data.token, {temporary: true});
-        tokenForId.x = summonerToken.data.x;
-        tokenForId.y = summonerToken.data.y;
-        tokenCreated = await canvas.tokens.createMany(tokenForId);
-        
-    }
+    // Wait for summoner to spawn the rolled number of tokens on the canvas
+    ui.notifications.info(`Click spawn location for ${createdMonster.name} within ${range} ft of summoner (${gNumSpawned} of ${gNeedSpawn})`);
+    captureClick();
+    
+    await sleepWhilePlacing();
+    
+    stopCapture();
+    
+    ui.notifications.info("Done spawning summons!");
     
     // If there is a combat active and Turn Alert is enabled, create an alert at this initiative in CL rounds
     let thisCombatant = game.combat?.combatant;
@@ -260,6 +286,7 @@ async function importMonster(html) {
         }
     }
     
+    // Check if dice so nice is active and use it to show the roll if applicable
     if (game.modules.get("dice-so-nice")?.active) game.dice3d.showForRoll(roll);
     
     // Create chat message about summon
@@ -275,4 +302,44 @@ async function importMonster(html) {
     ChatMessage.create({
         content: msg
     });
+}
+
+/**
+ * The following functions were provided by the Foundry community.
+ * 
+ * Captures mouse clicks, determines the square to spawn monster in through mouse position at time of click, and spawns the token at that location.
+ */
+function getMousePosition() {
+  const mouse = canvas.app.renderer.plugins.interaction.mouse;
+  return mouse.getLocalPosition(canvas.app.stage);
+}
+
+function getCenterGrid(point = {})
+{
+  const arr = canvas.grid.getCenter(point.x, point.y);
+  return { x: arr[0], y : arr[1] };
+}
+
+async function handleClick(event) {
+    if(gNumSpawned < gNeedSpawn && !!createdMonster){
+        await spawnToken();
+        gNumSpawned++;
+        ui.notifications.info(`Click spawn location for ${createdMonster.name} within ${range} ft of summoner (${gNumSpawned} of ${gNeedSpawn})`);
+    }
+}
+ 
+function captureClick() {
+  $(document.body).on("click", handleClick);
+}
+ 
+function stopCapture() {
+   $(document.body).off("click", handleClick); 
+}
+ 
+const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+ 
+async function sleepWhilePlacing() {
+    while(gNumSpawned<gNeedSpawn){
+        await wait(100);
+    }
 }
