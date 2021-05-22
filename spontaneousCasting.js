@@ -43,45 +43,50 @@ else {
 
       // Build prepared slot and spontaneous replacement options
       let slotOptions = populatePrepared(null, spellbooks[0].name);
-      let slotSpellID = slotOptions.length ? slotOptions[1][0]._id : null;
-      let castOptions = populateSpontaneous(null, slotSpellID);
-      let form = `
-                <form class="flexcol">
-                    <div class="form-group">
-                        <label>Caster:</label>
-                        <p>${actor.name}</p>
-                    </div>
-                    <div class="form-group">
-                        <label>Spellbook:</label>
-                        <select id="classSelect" style="text-transform: capitalize">${bookOptions}</select>
-                    </div>
-                    <div class="form-group">
-                        <label>Spell Slot to Use:</label>
-                        <select id="slotSelect">${slotOptions[0]}</select>
-                    </div>
-                    <div class="form-group">
-                        <label>Spell to Cast:</label>
-                        <select id="castSelect">${castOptions}</select>
-                    </div>
-                </form>
-            `;
+      if (!slotOptions[1].length) {
+        ui.notifications.warn(`${actor.data.name} does not have any spells prepared`);
+      }
+      else {
+        let slotSpellID = slotOptions[1].length > 0? slotOptions[1][0]._id : null;
+        let castOptions = populateSpontaneous(null, slotSpellID);
+        let form = `
+          <form class="flexcol">
+            <div class="form-group">
+              <label>Caster:</label>
+              <p>${actor.name}</p>
+            </div>
+            <div class="form-group">
+              <label>Spellbook:</label>
+              <select id="classSelect" style="text-transform: capitalize">${bookOptions}</select>
+            </div>
+            <div class="form-group">
+              <label>Spell Slot to Use:</label>
+              <select id="slotSelect">${slotOptions[0]}</select>
+            </div>
+            <div class="form-group">
+              <label>Spell to Cast:</label>
+              <select id="castSelect">${castOptions}</select>
+            </div>
+          </form>
+      `;
 
-      // Display UI
-      const dialog = new Dialog({
-        title: "Spontaneous Casting",
-        content: form,
-        buttons: {
-          use: {
-            icon: '<i class="fas fa-dice-d20"></i>',
-            label: "Use Spell Slot",
-            callback: useSpell
-          }
-        },
-        render: (htm) => {
-          htm.find('#classSelect').change(populatePrepared.bind(this, htm, null));
-          htm.find('#slotSelect').change(populateSpontaneous.bind(this, htm, null));
-        },
-      }).render(true);
+        // Display UI
+        const dialog = new Dialog({
+          title: "Spontaneous Casting",
+          content: form,
+          buttons: {
+            use: {
+              icon: '<i class="fas fa-dice-d20"></i>',
+              label: "Use Spell Slot",
+              callback: useSpell
+            }
+          },
+          render: (htm) => {
+            htm.find('#classSelect').change(populatePrepared.bind(this, htm, null));
+            htm.find('#slotSelect').change(populateSpontaneous.bind(this, htm, null));
+          },
+        }).render(true);
+      }
     }
   }
 
