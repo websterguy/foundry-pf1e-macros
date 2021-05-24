@@ -18,8 +18,8 @@ const c = {
 const tokens = canvas.tokens.controlled;
 let actors = tokens.map(o => o.actor);
 if (!actors.length && c.actorNames.length) actors = game.actors.entities.filter(o => c.actorNames.includes(o.name));
-if (!actors.length) actors = game.actors.entities.filter(o => o.hasPlayerOwner && o.hasPerm(game.user, "OWNER") && o.name === game.user.character.name);
-actors = actors.filter(o => o.hasPerm(game.user, "OWNER"));
+if (!actors.length) actors = game.actors.entities.filter(o => o.hasPlayerOwner && o.testUserPermission(game.user, "OWNER") && o.name === game.user.character.name);
+actors = actors.filter(o => o.testUserPermission(game.user, "OWNER"));
 
 // Must have 1 actor
 if (!actors.length) ui.notifications.warn("No applicable actor found");
@@ -47,7 +47,7 @@ else {
         ui.notifications.warn(`${actor.data.name} does not have any spells prepared`);
       }
       else {
-        let slotSpellID = slotOptions[1].length > 0? slotOptions[1][0]._id : null;
+        let slotSpellID = slotOptions[1].length > 0? slotOptions[1][0].id : null;
         let castOptions = populateSpontaneous(null, slotSpellID);
         let form = `
           <form class="flexcol">
@@ -100,9 +100,9 @@ function useSpell(htm, event) {
   // Get the info about the spells
   let usedSlotID = htm.find('#slotSelect')[0].value;
   let spontSpellID = htm.find('#castSelect')[0].value;
-  let usedSpell = actor.items.find(o => o._id === usedSlotID);
-  let spontSpell = actor.items.find(o => o._id === spontSpellID);
-
+  let usedSpell = actor.items.find(o => o.id === usedSlotID);
+  let spontSpell = actor.items.find(o => o.id === spontSpellID);
+    
   // Update used spell preparations
   let newUses = usedSpell.data.data.preparation.preparedAmount - 1;
   actor.items.get(usedSlotID).update({
@@ -122,13 +122,17 @@ function useSpell(htm, event) {
   ChatMessage.create({
     content: msg
   });
-
+    
+    console.log(spontSpell.name, spontSpellID, actor.id);
+    
   // Use the spontaneous spell
-  game.pf1.rollItemMacro(spontSpell.name, {
-    itemId: spontSpellID,
-    itemType: "spell",
-    actorId: actor._id,
-  });
+//   game.pf1.rollItemMacro(spontSpell.name, {
+//     itemId: spontSpellID,
+//     itemType: "spell",
+//     actorId: actor.id,
+//   });
+
+    spontSpell.useSpell();
 }
 
 /**
@@ -140,14 +144,14 @@ function populatePrepared(htm, spellbook, event = null) {
   let selectedBook = !spellbook ? htm.find('#classSelect')[0].value : spellbook;
 
   // Get the currently prepared spells in the book, ordered highest level to lowest
-  let availableSpells = actor.data.items.filter(o => o.type === "spell" && o.data.level > 0 && !o.data.atWill && o.data.preparation.preparedAmount > 0 && o.data.spellbook === selectedBook.toLowerCase()).sort(function(a, b) {
-    return b.data.level - a.data.level
+  let availableSpells = actor.data.items.filter(o => o.type === "spell" && o.data.data.level > 0 && !o.data.data.atWill && o.data.data.preparation.preparedAmount > 0 && o.data.data.spellbook === selectedBook.toLowerCase()).sort(function(a, b) {
+    return b.data.data.level - a.data.data.level;
   });
 
   // Build the options, if any
   let slotOptions = "";
   if (availableSpells.length) {
-    slotOptions = availableSpells.map(o => `<option value="${o._id}">${o.name} (lv ${o.data.level}, ${o.data.preparation.preparedAmount} avail)</option>`);
+    slotOptions = availableSpells.map(o => `<option value="${o.id}">${o.name} (lv ${o.data.data.level}, ${o.data.data.preparation.preparedAmount} avail)</option>`);
   } else slotOptions = "<option>No Prepared Slots Available</option>";
 
   // If called from the form, update the form
@@ -168,18 +172,18 @@ function populatePrepared(htm, spellbook, event = null) {
 function populateSpontaneous(htm, spellSlotID, event = null) {
   // Get info about the prepared spell
   let selectedSpellID = !spellSlotID ? htm.find('#slotSelect')[0].value : spellSlotID;
-  let selectedSpell = actor.data.items.find(o => o._id === selectedSpellID);
-  let slotLevel = selectedSpell?.data.level;
+  let selectedSpell = actor.data.items.find(o => o.id === selectedSpellID);
+  let slotLevel = selectedSpell?.data.data.level;
 
   // Find at-will spells of the same level or lower to spontaneous cast
-  let spontSpells = actor.data.items.filter(o => o.type === "spell" && o.data.level <= slotLevel && o.data.atWill && o.data.spellbook === selectedSpell.data.spellbook.toLowerCase()).sort(function(a, b) {
-    return b.data.level - a.data.level
+  let spontSpells = actor.data.items.filter(o => o.type === "spell" && o.data.data.level <= slotLevel && o.data.data.atWill && o.data.data.spellbook === selectedSpell.data.data.spellbook.toLowerCase()).sort(function(a, b) {
+    return b.data.data.level - a.data.data.level
   });
 
   // Build the options if any
   let spontOptions = "";
   if (spontSpells.length) {
-    spontOptions = spontSpells.map(o => `<option value="${o._id}">${o.name} (lv ${o.data.level})</option>`);
+    spontOptions = spontSpells.map(o => `<option value="${o.id}">${o.name} (lv ${o.data.data.level})</option>`);
   } else spontOptions = "<option>No At Will Spells Available</option>";
 
   // If called from the form, update the form

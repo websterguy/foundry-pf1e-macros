@@ -20,9 +20,9 @@ const c = {
 // Find the actor
 const tokens = canvas.tokens.controlled;
 let actors = tokens.map(o => o.actor);
-if (!actors.length && c.actorName) actors = game.actors.entities.filter(o => c.actorName === (o.name));
-if (!actors.length && game.user.character) actors = game.actors.entities.filter(o => o.hasPlayerOwner && o.hasPerm(game.user, "OWNER") && o.name === game.user.character.name);
-actors = actors.filter(o => o.hasPerm(game.user, "OWNER"));
+if (!actors.length && c.actorName) actors = game.actors.content.filter(o => c.actorName === (o.name));
+if (!actors.length && game.user.character) actors = game.actors.content.filter(o => o.hasPlayerOwner && o.testUserPermission(game.user, "OWNER") && o.name === game.user.character.name);
+actors = actors.filter(o => o.testUserPermission(game.user, "OWNER"));
 
 let arcanePool, arcaneMax, arcaneValue;
 

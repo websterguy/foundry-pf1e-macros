@@ -9,11 +9,10 @@ const c = {
 
 const tokens = canvas.tokens.controlled;
 let actorsSelected = tokens.map(o => o.actor);
-console.log(actorsSelected);
 let actors = [];
-if (!actors.length && c.ignorePCs.length > 0) actors = game.actors.entities.filter(o => !c.ignorePCs.includes(o.name));
-if (!actors.length) actors = game.actors.entities.filter(o => o.hasPlayerOwner);
-actors = actors.filter(o => o.hasPerm(game.user, "OWNER") && !c.ignorePCs?.includes(o.name));
+if (!actors.length && c.ignorePCs.length > 0) actors = game.actors.contents.filter(o => !c.ignorePCs.includes(o.name));
+if (!actors.length) actors = game.actors.contents.filter(o => o.hasPlayerOwner);
+actors = actors.filter(o => o.testUserPermission(game.user, "OWNER") && !c.ignorePCs?.includes(o.name));
 
 if (!actors.length) ui.notifications.warn("No applicable actor(s) found");
 else {
@@ -57,12 +56,14 @@ else {
     }
   };
   
-  let thisCombat = game.combat?.combatants;
+  let thisCombat = game.combat?.combatants.map(o => o);
+  
   let npcChecklist = "";
   let hasNPCs = false;
   let npcXpTotal = 0;
   
   if (thisCombat && thisCombat.length > 0) {
+      console.log("combat");
       let combatNPCs = thisCombat.filter(o => !o.actor.hasPlayerOwner && o.actor.data.type === "npc" && !c.ignoreNPCs.includes(o.actor.name));
       hasNPCs = (combatNPCs.length > 0);
       if (hasNPCs) {
@@ -146,7 +147,6 @@ else {
   };
   
   let updateValue = function(xpSpan, xpInput, event) {
-      console.log(xpInput.val());
     let inputXP = parseInt(xpInput.val());
     if (isNaN(inputXP)) inputXP = 0;
     let newXP = npcXpTotal + inputXP;
