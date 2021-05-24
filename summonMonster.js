@@ -22,10 +22,10 @@ const config = {
 };
 
 // Check for Turn Alert module
-const turnAlertActive = game.modules.get("turnAlert")?.active;
+// const turnAlertActive = game.modules.get("turnAlert")?.active;
 
 // Build options for folders to summon from
-let packOptions = `<option value=""></option>` + game.packs.filter(p => p.entity === "Actor" && config.packSource.includes(p.metadata.package) && !config.ignoreCompendiums.includes(p.metadata.label)).map(p => `<option value="${p.collection}">${p.title}</option>`);
+let packOptions = `<option value=""></option>` + game.packs.filter(p => p.documentClass.documentName === "Actor" && config.packSource.includes(p.metadata.package) && !config.ignoreCompendiums.includes(p.metadata.label)).map(p => `<option value="${p.collection}">${p.title}</option>`);
 
 let summonerActor;
 let summonerToken;
@@ -149,18 +149,23 @@ async function populateMonster(htm, event) {
  * Spawns the token of createdMonster at the position of the mouse when clicked
  */
 async function spawnToken() {
-    let tokenForId = await canvas.tokens.createMany(createdMonster.data.token, {temporary: true});
+    let thisScene = game.scenes.viewed;
+    let tokenForId = await thisScene.createEmbeddedDocuments("Token", [createdMonster.data.token], {temporary: true});
+    
+    tokenForId = duplicate(tokenForId[0]);
     
     let location = getCenterGrid(getMousePosition());
- 
+    
     tokenForId.x = location.x;
     tokenForId.y = location.y;
  
     // Increase this offset for larger summons
-    tokenForId.x -= (scene.data.grid/2+(tokenForId.width-1)*scene.data.grid);
-    tokenForId.y -= (scene.data.grid/2+(tokenForId.height-1)*scene.data.grid);
- 
-    await canvas.tokens.createMany(tokenForId);
+    tokenForId.x -= (thisScene.data.grid / 2 + (tokenForId.width - 1) * thisScene.data.grid);
+    tokenForId.y -= (thisScene.data.grid / 2 + (tokenForId.height - 1) * thisScene.data.grid);
+    
+    tokenForId.actorId = createdMonster.id;
+    
+    await thisScene.createEmbeddedDocuments("Token", [tokenForId]);
  }
 
 /**
@@ -179,21 +184,23 @@ async function importMonster(html) {
     
     if (config.destinationFolder) {
         let summonFolder = game.folders.getName(config.destinationFolder);
-        
-        if (summonFolder === null) {
+        if (!summonFolder) {
             let folder = await Folder.create({name: config.destinationFolder, type: "Actor", parent: null});
-            folderID = folder._id;
+            folderID = folder.id;
         }
         else {
-            folderID = summonFolder._id;
+            folderID = summonFolder.id;
         }
     }
     
     // Import the monster from the compendium
-    let monsterEntity = game.packs.get(selectedPack).getEntity(selectedMonster);
-    await Promise.resolve(monsterEntity).then(async function(value){
-        createdMonster = await Actor.create(value);
-    })
+    let monsterEntity = await game.packs.get(selectedPack).getDocument(selectedMonster);
+    // await Promise.resolve(monsterEntity).then(async function(value){
+    //     createdMonster = await Actor.create(value);
+    // });
+    
+    createdMonster = duplicate(monsterEntity);
+    createdMonster = await Actor.create(createdMonster);
     
     // Update the actor permissions
     let currentPermission = createdMonster.data.permission;
@@ -204,20 +211,24 @@ async function importMonster(html) {
     }
     await createdMonster.update({"folder": folderID, "permission": updatedPermission});
     
+    
     // Get info about summon count
     let countFormula = html.find("#summonCount").val();
     let roll;
     let rollResult = 0;
     let rollHtml = "";
     
+    let testRoll = new Roll(countFormula);
+    
     // Verify summon count formula is valid and will result in at least 1 summon
-    if (!Roll.validate(countFormula) || (new Roll(countFormula).evaluate({minimize: true}).total <= 0)) {
+    if (!Roll.validate(countFormula) || (await testRoll.evaluate({minimize: true}).total <= 0)) {
         ui.notifications.error(`${countFormula} not a valid roll formula. Defaulting to 1.`);
         countFormula = "1";
     }
     
     // Calculate the roll
-    roll = new Roll(countFormula).roll();
+    testRoll = new Roll(countFormula);
+    roll = await testRoll.roll();
     rollResult = roll.total;
     gNeedSpawn = rollResult;
     
@@ -272,19 +283,19 @@ async function importMonster(html) {
     ui.notifications.info("Done spawning summons!");
     
     // If there is a combat active and Turn Alert is enabled, create an alert at this initiative in CL rounds
-    let thisCombatant = game.combat?.combatant;
-    if (thisCombatant && turnAlertActive) {
-        if (casterLevel > 0) {
-            const alertData = {
-                round: casterLevel,
-                roundAbsolute: false,
-                turnId: thisCombatant._id,
-                message: `${createdMonster.name} disappears.`
-            }
+    // let thisCombatant = game.combat?.combatant;
+    // if (thisCombatant && turnAlertActive) {
+    //     if (casterLevel > 0) {
+    //         const alertData = {
+    //             round: casterLevel,
+    //             roundAbsolute: false,
+    //             turnId: thisCombatant._id,
+    //             message: `${createdMonster.name} disappears.`
+    //         }
             
-            TurnAlert.create(alertData);
-        }
-    }
+    //         TurnAlert.create(alertData);
+    //     }
+    // }
     
     // Check if dice so nice is active and use it to show the roll if applicable
     if (game.modules.get("dice-so-nice")?.active) game.dice3d.showForRoll(roll);
