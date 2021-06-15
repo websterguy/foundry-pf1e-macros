@@ -1,4 +1,10 @@
 # foundry-pf1e-macros
+## My PF1 Mods
+* Treasure Generator - https://github.com/websterguy/pf1e-treasure-generator
+* 
+* Magic Weapon/Armor Generator - https://github.com/websterguy/pf1-magic-item-gen
+
+* Mighty Morphin Mod (Beast Shape, Wild Shape, Enlarge Person, and more)  - https://github.com/websterguy/pf1-mighty-morphin-mod
 
 ## awardXP
 Award XP macro builds a checklist of PCs and allows the GM to distribute a given amount of XP to the PCs (either all receiving the same or an equal share of the amount).
