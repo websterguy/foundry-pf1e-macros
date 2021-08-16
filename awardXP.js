@@ -116,7 +116,7 @@ else {
   const xpDisplay = `<h3>Total XP: <span id="xpAwardTotal">${npcXpTotal}</span></h3>`;
 
   new Dialog({
-    title: "Roll saving throw",
+    title: "Award XP",
     content: `<form class="flexcol">${msg}${field}${xpDisplay}</form>`,
     buttons: {
       ok: {
