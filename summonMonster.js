@@ -204,12 +204,12 @@ async function importMonster(html) {
     
     // Update the actor permissions
     let currentPermission = createdMonster.data.permission;
-    let updatedPermission = currentPermission[game.userId] = 3;
+    currentPermission[game.userId] = 3;
     if (game.user.isGM && summonerActor.hasPlayerOwner) {
         let giveOwnerCheck = html.find('#ownerCheck')[0].checked;
-        if (giveOwnerCheck) updatedPermission = summonerActor.data.permission;
+        if (giveOwnerCheck) currentPermission = summonerActor.data.permission;
     }
-    await createdMonster.update({"folder": folderID, "permission": updatedPermission});
+    await createdMonster.update({"folder": folderID, "permission": currentPermission});
     
     
     // Get info about summon count
