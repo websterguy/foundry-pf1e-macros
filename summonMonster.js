@@ -259,7 +259,7 @@ async function importMonster(html) {
     
     // Create the buff on the actor for augment, set the bonuses, hide it on the token, and change actor's name
     if (buffData) {
-        await createdMonster.createOwnedItem(buffData);
+        await createdMonster.createEmbeddedDocuments("Item", [buffData]);
         let buff = createdMonster.items.find(o => o.name === "Augment Summoning" && o.type === "buff");
         let changes = [];
         changes.push({formula: "4", priority: 1, target: "ability", subTarget: "str", modifier: "enh"});
