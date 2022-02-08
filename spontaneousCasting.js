@@ -132,7 +132,7 @@ function useSpell(htm, event) {
 //     actorId: actor.id,
 //   });
 
-    spontSpell.useSpell();
+    spontSpell.use();
 }
 
 /**
