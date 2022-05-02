@@ -57,8 +57,8 @@ else {
 
 if (summonerActor && summonerToken) {
     // Build list of character's classes sorted by level (high to low)
-    classArray = Object.values(summonerActor.data.data.classes).sort(function(a, b) {return b.level - a.level});
-    let classOptions = classArray.map((p, index) => `<option value="${index}">${p.name} (Level ${p.level})</option>`);
+    classArray = Object.values(summonerActor.items.filter(o => o.type === 'class')).sort((a, b) => {return b.data.data.level - a.data.data.level});
+    let classOptions = classArray.map((p, index) => `<option value="${index}">${p.name} (Level ${p.data.data.level})</option>`);
     
     let ownerCheck = "";
     if (game.user.isGM && summonerActor.hasPlayerOwner) ownerCheck = `<div class="form-group"><label>Give Ownership to ${summonerActor.name}'s Owners:</label><input type="checkbox" id="ownerCheck"></div>`;
