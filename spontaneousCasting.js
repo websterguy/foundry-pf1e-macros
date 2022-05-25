@@ -33,16 +33,17 @@ else {
     let spellbooks = [];
     activeBooks.forEach((o) => {
       let book = actor.data.data.attributes.spells.spellbooks[o];
-      if (c.spontClasses.includes(book.class)) spellbooks.push(book);
+      if (c.spontClasses.includes(book.class)) spellbooks.push([o, book]);
     });
 
     // Build spellbook options
-    let bookOptions = spellbooks.map((o, index) => `<option value="${o.name}">${o.class} (${o.name})</option>`);
+    let bookOptions = spellbooks.map((o, index) => `<option value="${o.name}">${o[1].name} (${o[1].class}-${o[0]})</option>`);
     if (!bookOptions.length) ui.notifications.warn("No valid spellbooks available");
     else {
 
       // Build prepared slot and spontaneous replacement options
-      let slotOptions = populatePrepared(null, spellbooks[0].name);
+      console.log(spellbooks[0]);
+      let slotOptions = populatePrepared(null, spellbooks[0][0]);
       if (!slotOptions[1].length) {
         ui.notifications.warn(`${actor.data.name} does not have any spells prepared`);
       }
@@ -123,7 +124,7 @@ function useSpell(htm, event) {
     content: msg
   });
     
-    console.log(spontSpell.name, spontSpellID, actor.id);
+    //console.log(spontSpell.name, spontSpellID, actor.id);
     
   // Use the spontaneous spell
 //   game.pf1.rollItemMacro(spontSpell.name, {
