@@ -234,7 +234,7 @@ async function importMonster(html) {
     
     // Find chosen caster level info
     let chosenIndex = parseInt(html.find("#classSelect").val());
-    let classCL = classArray[chosenIndex].level;
+    let classCL = classArray[chosenIndex].data.data.level;
     let casterLevel = classCL;
     let clOverride = parseInt(html.find("#clOverride").val());
     
