@@ -21,11 +21,12 @@ const config = {
     useUserLinkedActorOnly: true // Change to false to allow users to use any selected token they own as the summoner
 };
 
+
 // Check for Turn Alert module
 // const turnAlertActive = game.modules.get("turnAlert")?.active;
 
 // Build options for folders to summon from
-let packOptions = `<option value=""></option>` + game.packs.filter(p => p.documentClass.documentName === "Actor" && config.packSource.includes(p.metadata.package) && !config.ignoreCompendiums.includes(p.metadata.label)).map(p => `<option value="${p.collection}">${p.title}</option>`);
+let packOptions = `<option value=""></option>` + game.packs.filter(p => p.documentName === "Actor" && config.packSource.includes(p.metadata.packageName) && !config.ignoreCompendiums.includes(p.metadata.name)).map(p => `<option value="${p.collection}">${p.title}</option>`);
 
 let summonerActor;
 let summonerToken;
@@ -50,15 +51,15 @@ else {
     summonerActor = game.user.character;
     if (!summonerActor) ui.notifications.warn("No token chosen as summoner.");
     else {
-        summonerToken = canvas.tokens.ownedTokens.filter(o => o.data.actorId === summonerActor.data._id)[0];
+        summonerToken = canvas.tokens.ownedTokens.filter(o => o.actorId === summonerActor.id)[0];
         if (!summonerToken) ui.notifications.warn(`No token of summoner ${summonerActor.name} available.`);
     }
 }
 
 if (summonerActor && summonerToken) {
     // Build list of character's classes sorted by level (high to low)
-    classArray = Object.values(summonerActor.items.filter(o => o.type === 'class')).sort((a, b) => {return b.data.data.level - a.data.data.level});
-    let classOptions = classArray.map((p, index) => `<option value="${index}">${p.name} (Level ${p.data.data.level})</option>`);
+    classArray = Object.values(summonerActor.items.filter(o => o.type === 'class')).sort((a, b) => {return b.system.level - a.system.level});
+    let classOptions = classArray.map((p, index) => `<option value="${index}">${p.name} (Level ${p.system.level})</option>`);
     
     let ownerCheck = "";
     if (game.user.isGM && summonerActor.hasPlayerOwner) ownerCheck = `<div class="form-group"><label>Give Ownership to ${summonerActor.name}'s Owners:</label><input type="checkbox" id="ownerCheck"></div>`;
@@ -138,7 +139,7 @@ async function populateMonster(htm, event) {
     let monsterOptions = "";
     if (selectedPack) {
         let monsterList = await game.packs.get(selectedPack).getIndex();
-        monsterOptions = monsterList.map(p => `<option value="${p._id}">${p.name}</option>`);
+        monsterOptions = monsterList.contents.sort((a, b) => { return a.name > b.name ? 1 : -1; }).map(p => `<option value="${p._id}">${p.name}</option>`);
     }
     
     // Replace options
@@ -150,7 +151,7 @@ async function populateMonster(htm, event) {
  */
 async function spawnToken() {
     let thisScene = game.scenes.viewed;
-    let tokenForId = await thisScene.createEmbeddedDocuments("Token", [createdMonster.data.token], {temporary: true});
+    let tokenForId = await thisScene.createEmbeddedDocuments("Token", [createdMonster.prototypeToken], {temporary: true});
     
     tokenForId = duplicate(tokenForId[0]);
     
@@ -160,8 +161,8 @@ async function spawnToken() {
     tokenForId.y = location.y;
  
     // Increase this offset for larger summons
-    tokenForId.x -= (thisScene.data.grid / 2 + (tokenForId.width - 1) * thisScene.data.grid);
-    tokenForId.y -= (thisScene.data.grid / 2 + (tokenForId.height - 1) * thisScene.data.grid);
+    tokenForId.x -= (thisScene.grid.size / 2 + (tokenForId.width - 1) * thisScene.grid.size);
+    tokenForId.y -= (thisScene.grid.size / 2 + (tokenForId.height - 1) * thisScene.grid.size);
     
     tokenForId.actorId = createdMonster.id;
     
@@ -203,13 +204,13 @@ async function importMonster(html) {
     createdMonster = await Actor.create(createdMonster);
     
     // Update the actor permissions
-    let currentPermission = createdMonster.data.permission;
-    currentPermission[game.userId] = 3;
+    let currentPermission = createdMonster.permission;
+    let updatedPermission = currentPermission[game.userId] = 3;
     if (game.user.isGM && summonerActor.hasPlayerOwner) {
         let giveOwnerCheck = html.find('#ownerCheck')[0].checked;
-        if (giveOwnerCheck) currentPermission = summonerActor.data.permission;
+        if (giveOwnerCheck) updatedPermission = summonerActor.permission;
     }
-    await createdMonster.update({"folder": folderID, "permission": currentPermission});
+    await createdMonster.update({"folder": folderID, "permission": updatedPermission});
     
     
     // Get info about summon count
@@ -234,7 +235,7 @@ async function importMonster(html) {
     
     // Find chosen caster level info
     let chosenIndex = parseInt(html.find("#classSelect").val());
-    let classCL = classArray[chosenIndex].data.data.level;
+    let classCL = classArray[chosenIndex].system.level;
     let casterLevel = classCL;
     let clOverride = parseInt(html.find("#clOverride").val());
     
@@ -247,7 +248,7 @@ async function importMonster(html) {
     //Set up buff for augment
     let buffData = null;
     if (html.find("#augmentCheck")[0].checked) {
-        buffData = { type: "buff", name: "Augment Summoning", data: { buffType: "temp" } };
+        buffData = { type: "buff", name: "Augment Summoning", system: { buffType: "temp" } };
     }
     
     // Set up range as close or medium based on caster level and range metamagic
@@ -264,8 +265,8 @@ async function importMonster(html) {
         let changes = [];
         changes.push({formula: "4", priority: 1, target: "ability", subTarget: "str", modifier: "enh"});
         changes.push({formula: "4", priority: 1, target: "ability", subTarget: "con", modifier: "enh"});
-        await buff.update({"data.changes": changes, "data.hideFromToken": true});
-        await buff.update({"data.active": true});
+        await buff.update({"system.changes": changes, "system.hideFromToken": true});
+        await buff.update({"system.active": true});
         let actorName = createdMonster.name + " (Augmented)";
         await createdMonster.update({"name": actorName});
         await createdMonster.update({"token.name": actorName});
@@ -321,7 +322,7 @@ async function importMonster(html) {
  * Captures mouse clicks, determines the square to spawn monster in through mouse position at time of click, and spawns the token at that location.
  */
 function getMousePosition() {
-  const mouse = canvas.app.renderer.plugins.interaction.mouse;
+  const mouse = canvas.app.renderer.plugins.interaction.pointer;
   return mouse.getLocalPosition(canvas.app.stage);
 }
 
