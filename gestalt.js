@@ -23,7 +23,7 @@ let d = new Dialog({
 
                 class1.name = class1.name + '/' + class2.name,
                 class1.system.hd = Math.max(class1.system.hd, class2.system.hd);
-                class1.system.bab = (class1.bab === 'high' || class2.bab === 'high') ? 'high' : class2.bab === 'med'? 'med' : class1.bab;
+                class1.system.bab = (class1.system.bab === 'high' || class2.system.bab === 'high') ? 'high' : class2.system.bab === 'med'? 'med' : class1.system.bab;
                 class1.system.skillsPerLevel = Math.max(class1.system.skillsPerLevel, class2.system.skillsPerLevel);
                 class1.system.weaponProf.value = class1.system.weaponProf.value.concat(class2.system.weaponProf.value.filter(o => !class1.system.weaponProf.value.includes(o)));
                 class1.system.armorProf.value = class1.system.armorProf.value.concat(class2.system.armorProf.value.filter(o => !class1.system.armorProf.value.includes(o)));
@@ -43,6 +43,12 @@ let d = new Dialog({
                 class1.system.tag = class1.system.tag + class2.system.tag.charAt(0).toUpperCase() + class2.system.tag.slice(1);
                 class1.system.description.value = `<h1>${class1.name}</h1>${class1.system.description.value}<h1>${class2.name}</h1>${class2.system.description.value}`;
                 class1.system.links.classAssociations = class1.system.links.classAssociations.concat(class2.system.links.classAssociations);
+                class1.system.casting = !!class1.system.casting?.ability ? class1.system.casting : class2.system.casting;
+                const class1WealthFormula = class1.system.wealth.length > 0 ? class1.system.wealth.replace("d12", " * 6.5").replace("d10", " * 5.5").replace("d8", " * 4.5").replace("d6", " * 3.5").replace("d4", " * 2.5") : "0"; 
+                const class2WealthFormula = class2.system.wealth.length > 0 ? class2.system.wealth.replace("d12", " * 6.5").replace("d10", " * 5.5").replace("d8", " * 4.5").replace("d6", " * 3.5").replace("d4", " * 2.5") : "0";;
+                const class1Wealth = await new Roll(class1WealthFormula).evaluate();
+                const class2Wealth = await new Roll(class2WealthFormula).evaluate();
+                class1.system.wealth = class1Wealth.total > class2Wealth.total ? class1.system.wealth : class2.system.wealth;
                 Item.create(class1);
             }
         }
