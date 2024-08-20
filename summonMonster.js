@@ -14,7 +14,7 @@
  * 
  **/
 const config = {
-    packSource: ["pf1"], // list of package sources for summons actor folders
+    packSource: ["pf1",game.world.id], // list of package sources for summons actor folders
     ignoreCompendiums: [""],
     destinationFolder: "Summons", // Folder to file summons in when imported. Will be auto-created by GM users, but not players
     renameAugmented: true, // Appends "(Augmented)" to the token if augmented"
