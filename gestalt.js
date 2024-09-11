@@ -15,8 +15,8 @@ let d = new Dialog({
             callback: async html => {
                 let choice1 = html.find('#class1')[0].value;
                 let choice2 = html.find('#class2')[0].value;
-                const class1 = duplicate(await classPack.getDocument(choice1));
-                const class2 = duplicate(await classPack.getDocument(choice2));
+                const class1 = await classPack.getDocument(choice1).toObject();
+                const class2 = await classPack.getDocument(choice2).toObject();
 
                 //SETS ICON
                 class1.img = "systems/pf1/icons/feats/improved-feint.jpg";
