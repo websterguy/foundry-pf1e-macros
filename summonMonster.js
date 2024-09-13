@@ -164,7 +164,7 @@ async function spawnToken() {
     tokenForId.x -= (thisScene.grid.size / 2 + (tokenForId.width - 1) * thisScene.grid.size);
     tokenForId.y -= (thisScene.grid.size / 2 + (tokenForId.height - 1) * thisScene.grid.size);
     
-    tokenForId.actor.id = createdMonster.id;
+    tokenForId.actorId = createdMonster.id;
     
     await thisScene.createEmbeddedDocuments("Token", [tokenForId]);
  }
