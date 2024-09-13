@@ -51,7 +51,7 @@ else {
     summonerActor = game.user.character;
     if (!summonerActor) ui.notifications.warn("No token chosen as summoner.");
     else {
-        summonerToken = canvas.tokens.ownedTokens.filter(o => o.actorId === summonerActor.id)[0];
+        summonerToken = canvas.tokens.ownedTokens.filter(o => o.actor.id === summonerActor.id)[0];
         if (!summonerToken) ui.notifications.warn(`No token of summoner ${summonerActor.name} available.`);
     }
 }
@@ -164,7 +164,7 @@ async function spawnToken() {
     tokenForId.x -= (thisScene.grid.size / 2 + (tokenForId.width - 1) * thisScene.grid.size);
     tokenForId.y -= (thisScene.grid.size / 2 + (tokenForId.height - 1) * thisScene.grid.size);
     
-    tokenForId.actorId = createdMonster.id;
+    tokenForId.actor.id = createdMonster.id;
     
     await thisScene.createEmbeddedDocuments("Token", [tokenForId]);
  }
