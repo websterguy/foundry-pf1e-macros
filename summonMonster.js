@@ -26,7 +26,7 @@ const config = {
 // const turnAlertActive = game.modules.get("turnAlert")?.active;
 
 // Build options for folders to summon from
-let packOptions = `<option value=""></option>` + game.packs.filter(p => p.documentName === "Actor" && config.packSource.includes(p.metadata.packageName) && !config.ignoreCompendiums.includes(p.metadata.name)).map(p => `<option value="${p.collection}">${p.title}</option>`);
+let packOptions = `<option value=""></option>` + game.packs.filter(p => p.documentName === "Actor" && config.packSource.includes(p.metadata.packageName) && !config.ignoreCompendiums.includes(p.metadata.name) && p.visible).map(p => `<option value="${p.collection}">${p.title}</option>`);
 
 let summonerActor;
 let summonerToken;
