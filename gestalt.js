@@ -1,4 +1,5 @@
 // Creates a gestalt class from 2 chosen pf1 classes, puts the class in your world items tab
+// if both classes are spellcasting classes, it just gives the automatic progression of the first class, so you will need to set that up
 const classPack = game.packs.get('pf1.classes');
 
 const classes = classPack.index.map(o => {return {id: o._id, name: o.name}}).sort((a,b) => {return (b.name < a.name ? 1 : b.name > a.name ? -1 : 0)});
@@ -15,8 +16,8 @@ let d = new Dialog({
             callback: async html => {
                 let choice1 = html.find('#class1')[0].value;
                 let choice2 = html.find('#class2')[0].value;
-                const class1 = await classPack.getDocument(choice1).toObject();
-                const class2 = await classPack.getDocument(choice2).toObject();
+                const class1 = (await classPack.getDocument(choice1)).toObject();
+                const class2 = (await classPack.getDocument(choice2)).toObject();
 
                 //SETS ICON
                 class1.img = "systems/pf1/icons/feats/improved-feint.jpg";
@@ -28,9 +29,7 @@ let d = new Dialog({
                 class1.system.weaponProf.value = class1.system.weaponProf.value.concat(class2.system.weaponProf.value.filter(o => !class1.system.weaponProf.value.includes(o)));
                 class1.system.armorProf.value = class1.system.armorProf.value.concat(class2.system.armorProf.value.filter(o => !class1.system.armorProf.value.includes(o)));
                 class1.system.weaponProf.custom.push(...class2.system.weaponProf.custom.filter(o => !class1.system.weaponProf.custom.includes(o)));
-                console.log(class1.system.weaponProf.custom);
                 class1.system.weaponProf.custom = class1.system.weaponProf.custom.toSorted();
-                console.log(class1.system.weaponProf.custom);
                 class1.system.armorProf.custom.push(...class2.system.armorProf.custom.filter(o => !class1.system.armorProf.custom.includes(o)));
                 class1.system.armorProf.custom = class1.system.armorProf.custom.toSorted();
                 class1.system.savingThrows.fort = {
