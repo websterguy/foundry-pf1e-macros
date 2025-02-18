@@ -18,6 +18,7 @@ let d = new Dialog({
                 let choice2 = html.find('#class2')[0].value;
                 const class1 = (await classPack.getDocument(choice1)).toObject();
                 const class2 = (await classPack.getDocument(choice2)).toObject();
+                console.log(class1);
 
                 //SETS ICON
                 class1.img = "systems/pf1/icons/feats/improved-feint.jpg";
@@ -26,12 +27,8 @@ let d = new Dialog({
                 class1.system.hd = Math.max(class1.system.hd, class2.system.hd);
                 class1.system.bab = (class1.system.bab === 'high' || class2.system.bab === 'high') ? 'high' : class2.system.bab === 'med'? 'med' : class1.system.bab;
                 class1.system.skillsPerLevel = Math.max(class1.system.skillsPerLevel, class2.system.skillsPerLevel);
-                class1.system.weaponProf.value = class1.system.weaponProf.value.concat(class2.system.weaponProf.value.filter(o => !class1.system.weaponProf.value.includes(o)));
-                class1.system.armorProf.value = class1.system.armorProf.value.concat(class2.system.armorProf.value.filter(o => !class1.system.armorProf.value.includes(o)));
-                class1.system.weaponProf.custom.push(...class2.system.weaponProf.custom.filter(o => !class1.system.weaponProf.custom.includes(o)));
-                class1.system.weaponProf.custom = class1.system.weaponProf.custom.toSorted();
-                class1.system.armorProf.custom.push(...class2.system.armorProf.custom.filter(o => !class1.system.armorProf.custom.includes(o)));
-                class1.system.armorProf.custom = class1.system.armorProf.custom.toSorted();
+                class1.system.weaponProf = class1.system.weaponProf.concat(class2.system.weaponProf.filter(o => !class1.system.weaponProf.includes(o)));
+                class1.system.armorProf = class1.system.armorProf.concat(class2.system.armorProf.filter(o => !class1.system.armorProf.includes(o)));
                 class1.system.savingThrows.fort = {
                     value: (class1.system.savingThrows.fort.value === 'high' || class2.system.savingThrows.fort.value === 'high') ? 'high': class1.system.savingThrows.fort.value === 'low' ? 'low' : class2.system.savingThrows.fort.value};
                 class1.system.savingThrows.ref = {
