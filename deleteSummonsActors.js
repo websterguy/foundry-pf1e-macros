@@ -12,7 +12,7 @@ else {
 }
 
 async function deleteFolderContents(folder) {
-    while (folder.content.length > 0) {
-        await folder.content[0].delete();
+    while (folder.contents.length > 0) {
+        await folder.contents[0].delete();
     }
 }
