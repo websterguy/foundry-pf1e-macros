@@ -40,10 +40,10 @@ else {
         }
         
         targets.forEach(o => {
-            let curXP = getProperty(o.data, "data.details.xp.value") || 0;
-            let levelXP = getProperty(o.data, "data.details.xp.max");
+            let curXP = getProperty(o, "system.details.xp.value") || 0;
+            let levelXP = getProperty(o, "system.details.xp.max");
             if (typeof curXP === "string") curXP = parseInt(curXP);
-            o.update({ "data.details.xp.value": curXP + xp });
+            o.update({ "system.details.xp.value": curXP + xp });
             msg += `<p style="font-size: 14px; margin: .1em 0"><strong>${o.name}:</strong> ${curXP} xp updated to ${(curXP + xp)} (next level at ${levelXP})</p>`;
         });
         
@@ -64,16 +64,16 @@ else {
   
   if (thisCombat && thisCombat.length > 0) {
       console.log("combat");
-      let combatNPCs = thisCombat.filter(o => !o.actor.hasPlayerOwner && o.actor.data.type === "npc" && !c.ignoreNPCs.includes(o.actor.name));
+      let combatNPCs = thisCombat.filter(o => !o.actor?.hasPlayerOwner && o.actor?.type === "npc" && !c.ignoreNPCs.includes(o.actor.name));
       hasNPCs = (combatNPCs.length > 0);
       if (hasNPCs) {
           combatNPCs.forEach(combatant => {
             npcChecklist += `
                 <div class="form-group">
-                    <input type="checkbox" id="check${combatant.actor.name}" name="${combatant.actor.name}" value="${combatant.actor.data.data.details.xp.value}" checked class="npcXPCheckbox">
-                    <label for="check${combatant.actor.name}">${combatant.actor.name} (CR ${combatant.actor.data.data.details.cr.total}, ${combatant.actor.data.data.details.xp.value} xp)</label>
+                    <input type="checkbox" id="check${combatant.actor.name}" name="${combatant.actor.name}" value="${combatant.actor.system.details.xp.value}" checked class="npcXPCheckbox">
+                    <label for="check${combatant.actor.name}">${combatant.actor.name} (CR ${combatant.actor.system.details.cr.total}, ${combatant.actor.system.details.xp.value} xp)</label>
                 </div>`;
-            npcXpTotal += combatant.actor.data.data.details.xp.value;
+            npcXpTotal += combatant.actor.system.details.xp.value;
           });
       }
   }
@@ -82,7 +82,7 @@ else {
   // Build checkbox list for all active players
   actors.forEach(actor => {
     let checked = '';
-    if (actor.data.type === "npc") return;
+    if (actor.type === "npc") return;
     if (actor.hasPlayerOwner) checked = 'checked';
     if (actorsSelected.length && !actorsSelected.includes(actor)) checked = '';
     checkPlayerOptions+=`
