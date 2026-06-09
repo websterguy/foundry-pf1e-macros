@@ -1,8 +1,20 @@
 // Creates a gestalt class from 2 chosen pf1 classes, puts the class in your world items tab
 // if both classes are spellcasting classes, it just gives the automatic progression of the first class, so you will need to set that up
-const classPack = game.packs.get('pf1.classes');
+// Add the id of any compendiums containing classes you want into the array below. If you need help identifying an id, you can run the following code in a macro or console to get a long chat message containing the name and id of all item compendiums
+// ChatMessage.create({content: game.packs.filter(o => o.metadata.type === 'Item').map(o => {return '<p><strong>name:</strong> ' + o.metadata.name + ', <strong>id:</strong> ' + o.metadata.id + '</p>'}).sort().join('')})
+const classPacks = ['pf1.classes'];
 
-const classes = classPack.index.map(o => {return {id: o._id, name: o.name}}).sort((a,b) => {return (b.name < a.name ? 1 : b.name > a.name ? -1 : 0)});
+// Commend out the previous line and uncomment the next line to search EVERY item compendium.. WARNING: This is likely to find you a lot of classes you're not interested in, and some that may not have supported data
+//const classPacks = game.packs.contents.filter(o => o.metadata.type === 'Item').map(o => o.metadata.id);
+
+const classPack = [];
+
+for (const pack of classPacks) {
+  const docs = await game.packs.get(pack)?.getDocuments({type: 'class'}) ?? [];
+  classPack.push(...docs);
+}
+
+const classes = classPack.map(o => {return {id: o.uuid, name: o.name}}).sort((a,b) => {return (b.name < a.name ? 1 : b.name > a.name ? -1 : 0)});
 
 const classSelector1 = `<select id="class1">${classes.map(o => `<option value='${o.id}'>${o.name}</option>`)}</select>`
 const classSelector2 = `<select id="class2">${classes.map(o => `<option value='${o.id}'>${o.name}</option>`)}</select>`
@@ -16,9 +28,8 @@ let d = new Dialog({
             callback: async html => {
                 let choice1 = html.find('#class1')[0].value;
                 let choice2 = html.find('#class2')[0].value;
-                const class1 = (await classPack.getDocument(choice1)).toObject();
-                const class2 = (await classPack.getDocument(choice2)).toObject();
-                console.log(class1);
+                const class1 = (await fromUuid(choice1)).toObject();
+                const class2 = (await fromUuid(choice2)).toObject();
 
                 //SETS ICON
                 class1.img = "systems/pf1/icons/feats/improved-feint.jpg";
